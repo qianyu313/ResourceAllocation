@@ -249,6 +249,20 @@ length(which((statebase-statesum)>0))
 statesum<-apply(thetasave[,10,],2, sum)+apply(thetasave[,11,],2, sum)+apply(thetasave[,12,],2, sum)
 statebase<-apply(thetasave[,7,],2,sum)+apply(thetasave[,8,],2,sum)+apply(thetasave[,9,],2,sum)
 length(which((statebase-statesum)>0))
+#probability for 2024
+statesum<-apply(thetasave[,12,],2, sum)
+statebase<-apply(thetasave[,9,],2,sum)
+length(which((statebase-statesum)>0))
+
+
+statesum<-apply(thetasave[,12,],2, sum)
+statebase<-0.8*apply(thetasave[,9,],2,sum)
+length(which((statebase-statesum)>0))
+
+
+statesum<-apply(thetasave[,12,],2, sum)
+statebase<-0.8*apply(thetasave[,6,],2,sum)
+length(which((statebase-statesum)>0))
 
 
 
@@ -319,10 +333,10 @@ statebaseR<-apply(apply(thetasave[,7,], 2, '/',Exp[,6]),2, sum)
 length(which((statebaseR-statesumR)>0))
 
 #probability for 2022, 23, 24
-statesum<-apply(thetasave[,10,],2, sum)+apply(thetasave[,11,],2,sum)+apply(thetasave[,12,],2, sum)
-statebase<-apply(thetasave[,7,],2,sum)+apply(thetasave[,8,],2,sum)+apply(thetasave[,9,],2,sum)
-length(which((statebase-statesum)>0))
+statesum<-apply(apply(thetasave[,10,], 2, '/',Exp[,6]),2, sum)+apply(apply(thetasave[,11,], 2, '/',Exp[,6]),2, sum)+apply(apply(thetasave[,12,], 2, '/',Exp[,6]),2, sum)
 
+statebase<-apply(apply(thetasave[,7,], 2, '/',Exp[,6]),2, sum)+apply(apply(thetasave[,8,], 2, '/',Exp[,6]),2, sum)+apply(apply(thetasave[,9,], 2, '/',Exp[,6]),2, sum)
+length(which((statebaseR-statesumR)>0))
 
 
 
@@ -734,12 +748,28 @@ for (ll in 1:n) {
 }
 
 
+#probability for 2022
+statesum<-apply(thetasave[,10,],2, sum)
+statebase<-apply(thetasave[,7,],2,sum)
+length(which((statebase-statesum)>0))
 #probability for 2022, 23, 24
-statesum<-apply(thetasave[,10,],2, sum)+apply(thetasave[,11,],2,sum)+apply(thetasave[,12,],2, sum)
+statesum<-apply(thetasave[,10,],2, sum)+apply(thetasave[,11,],2, sum)+apply(thetasave[,12,],2, sum)
 statebase<-apply(thetasave[,7,],2,sum)+apply(thetasave[,8,],2,sum)+apply(thetasave[,9,],2,sum)
+length(which((statebase-statesum)>0))
+#probability for 2024
+statesum<-apply(thetasave[,12,],2, sum)
+statebase<-apply(thetasave[,9,],2,sum)
 length(which((statebase-statesum)>0))
 
 
+statesum<-apply(thetasave[,12,],2, sum)
+statebase<-0.8*apply(thetasave[,9,],2,sum)
+length(which((statebase-statesum)>0))
+
+
+statesum<-apply(thetasave[,12,],2, sum)
+statebase<-0.8*apply(thetasave[,6,],2,sum)
+length(which((statebase-statesum)>0))
 
 
 # three year rate 
@@ -814,10 +844,29 @@ for (ll in 1:n) {
 }
 
 
+#probability for 2022
+statesumR<-apply(apply(thetasave[,10,], 2, '/',Exp[,6]),2, sum)
+statebaseR<-apply(apply(thetasave[,7,], 2, '/',Exp[,6]),2, sum)
+length(which((statebaseR-statesumR)>0))
+
 #probability for 2022, 23, 24
-statesum<-apply(thetasave[,10,],2, sum)+apply(thetasave[,11,],2,sum)+apply(thetasave[,12,],2, sum)
-statebase<-apply(thetasave[,7,],2,sum)+apply(thetasave[,8,],2,sum)+apply(thetasave[,9,],2,sum)
-length(which((statebase-statesum)>0))
+statesum<-apply(apply(thetasave[,10,], 2, '/',Exp[,6]),2, sum)+apply(apply(thetasave[,11,], 2, '/',Exp[,6]),2, sum)+apply(apply(thetasave[,12,], 2, '/',Exp[,6]),2, sum)
+statebase<-apply(apply(thetasave[,7,], 2, '/',Exp[,6]),2, sum)+apply(apply(thetasave[,8,], 2, '/',Exp[,6]),2, sum)+apply(apply(thetasave[,9,], 2, '/',Exp[,6]),2, sum)
+length(which((statebaseR-statesumR)>0))
+
+
+#probability for 2024
+statesumR<-apply(apply(thetasave[,12,], 2, '/',Exp[,6]),2, sum)
+statebaseR<-0.8*apply(apply(thetasave[,9,], 2, '/',Exp[,6]),2, sum)
+length(which((statebaseR-statesumR)>0))
+
+
+#probability for 2024
+statesumR<-apply(apply(thetasave[,12,], 2, '/',Exp[,6]),2, sum)
+statebaseR<-0.8*apply(apply(thetasave[,6,], 2, '/',Exp[,6]),2, sum)
+length(which((statebaseR-statesumR)>0))
+
+
 
 
 
@@ -950,3 +999,5 @@ ggpubr::ggarrange(allocation2022,allocation2023,allocation2024,
 
 ggpubr::ggarrange(Rallocation2022,Rallocation2023,Rallocation2024,
                   ncol=1,common.legend=T,legend ="right")
+
+
