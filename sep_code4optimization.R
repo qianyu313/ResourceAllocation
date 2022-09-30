@@ -1,76 +1,72 @@
 
 
-
+library(nloptr)
 ################################################################################
 #####One year optimiztion#######################################################
 ################################################################################
 
-p=dim(X)[2]
+
+p=4
+n=10000
 mu=mean(Bupdiff$Bupdiff[101:600])
 sd=sd(Bupdiff$Bupdiff[101:600])
-thetasave=array(NA, dim = c(100,9))#this is for numbers in objective function
-{
+thetasave=array(NA, dim = c(100,12,n))#theta for each county each quarter
+ii=2
+nn=3
+cii=array(NA, dim = c(100,n))
+for (ll in 1:n) { 
   
-  epsilon<- colMeans(sampleused[[1]][,which(names(sampleused[[1]][1,])=='epsilon[1, 1]'):which(names(sampleused[[1]][1,])=='epsilon[100, 1]')])
-  s1<-colMeans(sampleused[[1]][,which(names(sampleused[[1]][1,])=='s1[1]'):(which(names(sampleused[[1]][1,])=='s1[100]'))])
-  s2<-colMeans(sampleused[[1]][,which(names(sampleused[[1]][1,])=='s2[1]'):(which(names(sampleused[[1]][1,])=='s2[100]'))])
-  postalpha0<-mean(sampleused[[1]][,'alpha0'])
-  postbeta0<-mean(sampleused[[1]][,'beta0'])
-  postbeta<-colMeans(sampleused[[1]][,which(names(sampleused[[1]][1,])=='beta[1]'):(which(names(sampleused[[1]][1,])=='beta[1]')+3)])
-  postalpha<-colMeans(sampleused[[1]][,which(names(sampleused[[1]][1,])=='alpha[1]'):(which(names(sampleused[[1]][1,])=='alpha[1]')+2)])
+  l=1*ll
+  epsilon<- sampleused[[1]][l,which(names(sampleused[[1]][1,])=='epsilon[1, 1]')
+                            :which(names(sampleused[[1]][1,])=='epsilon[100, 1]')]
+  s1<-sampleused[[1]][l,which(names(sampleused[[1]][1,])=='s1[1]')
+                      :(which(names(sampleused[[1]][1,])=='s1[100]'))]
+  s2<-sampleused[[1]][l,which(names(sampleused[[1]][1,])=='s2[1]')
+                      :(which(names(sampleused[[1]][1,])=='s2[100]'))]
+  
+  postbeta0<-sampleused[[1]][l,'beta0']
   
   
-  #postX=apply(postX1, c(1,2), mean)
+  postbeta<-sampleused[[1]][l,which(names(sampleused[[1]][1,])=='beta[1]')
+                            :(which(names(sampleused[[1]][1,])=='beta[1]')+3)]
+  
+  
+  postalpha<-sampleused[[1]][l,which(names(sampleused[[1]][1,])=='alpha[1]')
+                             :(which(names(sampleused[[1]][1,])=='alpha[1]')+2)]
+  postalpha0<-sampleused[[1]][l,'alpha0']
+  
   postX<-matrix(sampleused[[1]][l,1:(p*600)],600, )
   
   #q1
   postX100<-postX[1:100,]
   xalpha<-rep(postalpha0,100)+postX100[,1:3]%*%postalpha+rep(s1,1)+epsilon
-  thetasave[,1]<-exp(xalpha)*Exp[,1]
+  thetasave[,1,ll]<-exp(xalpha)*Exp[,1]
   theta_last<-exp(xalpha)*Exp[,1]
   
-  mm<-seq(101,501,by=100)#101-3701 q2-q38
+  mm<-seq(101,501,by=100)#
   
   for (m in mm) {
     postXmm<-postX[m:(m+99),]
     xbeta<-rep(postbeta0,100)+postXmm[,1:4]%*%postbeta+rep(s2,1)
-    thetasave[,(match(m,mm)+1)]<-exp(xbeta)*thetasave[,match(m,mm)]*Exp[,(match(m,mm)+1)]/Exp[,(match(m,mm))]
+    thetasave[,(match(m,mm)+1),ll]<-exp(xbeta)*thetasave[,match(m,mm),ll]*Exp[,(match(m,mm)+1)]/Exp[,(match(m,mm))]
     
   }
-  
-  
-  
-  
-  
-  
-  postX3900<-cbind(rep(((0)-mu[1])/sd[1],100), postXmm[,ii:nn],rep(7 ,100))
-  postX4000<-cbind(rep(((0)-mu[1])/sd[1],100), postXmm[,ii:nn],rep(8 ,100))
-  postX4100<-cbind(rep(((0)-mu[1])/sd[1],100), postXmm[,ii:nn],rep(9 ,100))
-  xbeta39<-rep(postbeta0,100)+postX3900[,1:(p)]%*%postbeta+rep(s2,1)
-  xbeta40<-rep(postbeta0,100)+postX4000[,1:(p)]%*%postbeta+rep(s2,1)
-  xbeta41<-rep(postbeta0,100)+postX4100[,1:(p)]%*%postbeta+rep(s2,1)
-  thetasave[,7]<-exp(xbeta39)*thetasave[,6]*Exp[,6]/Exp[,6]
-  thetasave[,8]<-exp(xbeta40)*thetasave[,7]*Exp[,6]/Exp[,6]
-  thetasave[,9]<-exp(xbeta41)*thetasave[,8]*Exp[,6]/Exp[,6]
+
   
   postnext<-cbind( postXmm[,ii:nn],rep(7 ,100))
-  ci<-exp(rep(postbeta0,100)+postnext%*%postbeta[2:p]+rep(s2,1))*thetasave[,6]
-  #postnext<-cbind( postXmm[,ii:nn],rep(8 ,100))
-  #di<-exp(rep(postbeta0,100)+postnext%*%postbeta[2:p]+rep(s2,1))*thetasave[,7]
-  #postnext<-cbind( postXmm[,ii:nn],rep(9 ,100))
-  #ei<-exp(rep(postbeta0,100)+postnext%*%postbeta[2:p]+rep(s2,1))*thetasave[,8]
-  #postnext<-cbind( postXmm[,ii:nn],rep(10 ,100))
-  #fi<-exp(rep(postbeta0,100)+postnext%*%postbeta[2:p]+rep(s2,1))*thetasave[,9]
-  
-  
-  
+  cii[,ll]<-exp(rep(postbeta0,100)+postnext%*%postbeta[2:p]+rep(s2,1))*thetasave[,6,ll]
   
   
 }
 
+ci<-rowMeans(cii)
+postbeta<-colMeans(sampleused[[1]][,which(names(sampleused[[1]][1,])=='beta[1]'):(which(names(sampleused[[1]][1,])=='beta[1]')+3)])
+
+
 lb <- rep(((0)-mu[1])/sd[1],100)
 ub <- rep((max(Bupdiff$Bupdiff[101:600])-(mean(Bupdiff$Bupdiff[101:600])))/
             sd(Bupdiff$Bupdiff[101:600]),100)
+postbeta<-colMeans(sampleused[[1]][,which(names(sampleused[[1]][1,])=='beta[1]'):(which(names(sampleused[[1]][1,])=='beta[1]')+3)])
 beta1hat<-postbeta[1]
 
 x0 <- c(rep(0,100))
@@ -81,25 +77,24 @@ fn1 <- function(x) #one year num
   for (i in 1:100) {
     a=ci[i]*exp(beta1hat*x[i])
     obj = obj + a 
-    #ci is other 
+    #ci includes other terms
   }
   
   return(obj)
 }
+fn1(rep((0-mu)/sd,100))
 
 fn2 <- function(x)  #one year rate
 {
   obj = 0
-  #  grad=0
   for (i in 1:100) {
     a=(ci[i]*exp(beta1hat*x[i]))/Exp[i,6]
-    # b=ci[i]*exp(beta1hat*x[i])*beta1hat
     obj = obj + a 
-    #grad = grad + b
   }
   
   return(obj/100)
 }
+#fn2(rep((0-mu)/sd,100))
 
 eqn2 <-function(x)#6743
 {
@@ -120,19 +115,36 @@ resnum_6743<-auglag(x0,
                     localtol=1e-05)
 
 BUPincr<-resnum_6743$par
-result4num<-data.frame(cbind(subregion=combined_data$Place[1:100]),num=round(BUPincr*sd[1]+mu[1]))
+result4num<-data.frame(cbind(subregion=final.data$Place[1:100]),num=round(BUPincr*sd[1]+mu[1]))
 result4num$num <- as.numeric(as.character(result4num$num))
 result4num[with(result4num, order(-result4num[,2])),]
-result4plot_rate<-result4num[with(result4num, order(-result4num[,2])),]
+result4plot_num<-result4num[with(result4num, order(-result4num[,2])),]
 
+
+
+resrate_6743<-auglag(x0,
+                    fn2,
+                    heq = eqn2,
+                    lower          = lb,
+                    upper          = ub,
+                    localsolver = "mma",
+                    localtol=1e-05)
 
 BUPincr<-resrate_6743$par
-result4num<-data.frame(cbind(subregion=combined_data$Place[1:100]),num=round(BUPincr*sd[1]+mu[1]))
-result4num$num <- as.numeric(as.character(result4num$num))
-result4num[with(result4num, order(-result4num[,2])),]
-result4plot_rate<-result4num[with(result4num, order(-result4num[,2])),]
+result4rate<-data.frame(cbind(subregion=final.data$Place[1:100]),num=round(BUPincr*sd[1]+mu[1]))
+result4rate$num <- as.numeric(as.character(result4rate$num))
+result4rate[with(result4rate, order(-result4rate[,2])),]
+result4plot_rate<-result4rate[with(result4rate, order(-result4rate[,2])),]
 
+
+rate<-summary(result4plot_rate$num)
+num<-summary(result4plot_num$num)
+
+rbind(rate,num)
 dim(result4num[result4num$num==0,])
+#77  2
+dim(result4num[result4rate$num==0,])
+#19  2
 
 library(xtable)
 
@@ -141,12 +153,9 @@ colnames(rateTABLE) <- c('subregion','value','subregion','value')
 xtable(rateTABLE, type = "latex", file = "result4plot.tex")
 
 
-
-rate<-summary(result4plot_rate$num)
-num<-summary(result4plot_rate$num)
-
-rbind(rate,num)
-
+numTABLE<- data.frame(cbind(result4plot_num[1:50,],result4plot_num[51:100,]))
+colnames(numTABLE) <- c('subregion','value','subregion','value')
+xtable(numTABLE, type = "latex", file = "result4plot.tex")
 
 rateTABLE<- data.frame(rbind(rate,num))
 colnames(rateTABLE) <- c("Min.", "1st Qu." ,"Median" , "Mean" ,"3rd Qu.", "Max.")
@@ -157,7 +166,10 @@ p=4
 n=10000
 mu=mean(Bupdiff$Bupdiff[101:600])
 sd=sd(Bupdiff$Bupdiff[101:600])
-thetasave=array(NA, dim = c(100,12,n))#theta for each county each quarter
+thetasave=array(NA, dim = c(100,12,n))
+#theta for each county each quarter,
+#thetasave[,7:9,] are baseline 10:12 are prediction with optimal solution
+
 ii=2
 nn=3
 
@@ -229,6 +241,17 @@ for (ll in 1:n) {
 
 
 
+#probability for 2022
+statesum<-apply(thetasave[,10,],2, sum)
+statebase<-apply(thetasave[,7,],2,sum)
+length(which((statebase-statesum)>0))
+#probability for 2022, 23, 24
+statesum<-apply(thetasave[,10,],2, sum)+apply(thetasave[,11,],2, sum)+apply(thetasave[,12,],2, sum)
+statebase<-apply(thetasave[,7,],2,sum)+apply(thetasave[,8,],2,sum)+apply(thetasave[,9,],2,sum)
+length(which((statebase-statesum)>0))
+
+
+
 # one year rate 
 for (ll in 1:n) { 
   
@@ -290,6 +313,18 @@ for (ll in 1:n) {
   
 }
 
+#probability for 2022
+statesumR<-apply(apply(thetasave[,10,], 2, '/',Exp[,6]),2, sum)
+statebaseR<-apply(apply(thetasave[,7,], 2, '/',Exp[,6]),2, sum)
+length(which((statebaseR-statesumR)>0))
+
+#probability for 2022, 23, 24
+statesum<-apply(thetasave[,10,],2, sum)+apply(thetasave[,11,],2,sum)+apply(thetasave[,12,],2, sum)
+statebase<-apply(thetasave[,7,],2,sum)+apply(thetasave[,8,],2,sum)+apply(thetasave[,9,],2,sum)
+length(which((statebase-statesum)>0))
+
+
+
 
 low=matrix(NA, nrow = 100,ncol = 9)
 high=matrix(NA, nrow = 100,ncol = 9)
@@ -302,16 +337,6 @@ prelow=matrix(NA, nrow = 100,ncol = 3)
 #hist(statesum)
 #abline(v=10182.6,col="red")
 #length(statesum[which(statesum<10182.6)])/10000
-
-
-statesum<-apply(thetasave[,10,],2, sum)
-statebase<-apply(thetasave[,7,],2,sum)
-length(which((statebase-statesum)>0))
-
-
-statesumR<-apply(apply(thetasave[,10,], 2, '/',Exp[,6]),2, sum)
-statebaseR<-apply(apply(thetasave[,7,], 2, '/',Exp[,6]),2, sum)
-length(which((statebaseR-statesumR)>0))
 
 
 thetamean9<-matrix(0,100,9)
@@ -332,7 +357,6 @@ for (i in 1:100) {
   for (j in 1:3) {
     prehigh[i,j]=hdi(thetasave[i,(9+j),])[1]
     prelow[i,j]= hdi(thetasave[i,(9+j),])[2]
-    
     Predicted[i,j]=mean(thetasave[i,(9+j),],na.rm = T)
   }
 }
@@ -340,7 +364,7 @@ for (i in 1:100) {
 
 
 
-y=matrix(as.numeric(bup_patient$death),nrow=100,byrow=F)
+y=matrix(as.numeric(final.data$death),nrow=100,byrow=F)
 
 
 
@@ -354,7 +378,7 @@ estima2<-data.frame(time=c(2016:2024),Estimated=colSums(mean), 'Upper Bound'=col
 
 
 newexp<-cbind(Exp,Exp[,6],Exp[,6],Exp[,6],Exp[,6],Exp[,6],Exp[,6])
-
+# use one year rate, then repeat line 379-413
 estima_r<-data.frame(time=c(2016:2024),Estimated=colMeans(mean/newexp[,1:9]), 'Upper Bound'=colMeans(high/newexp[,1:9]),
                      'Lower Bound'=colMeans(low/newexp[,1:9]), Observed=c(colMeans(y[,1:6]/Exp,na.rm = T),rep(NA,3)),
                      Predicted=c(rep(NA,6),colMeans(Predicted/newexp[,10:12])),
@@ -379,6 +403,7 @@ oneyearnum<-ggplot(data=estima2,aes(x=time) )+
   geom_line(aes( y=Predicted ,color ="Predicted" ),size=1)+
   labs(color = '')+
   scale_color_manual(values = COL)+
+  
   geom_point(aes(x=time, y=Observed ),shape = 23,fill="red",size=2) +
   geom_point(aes(x=time, y=Predicted ),shape = 24,fill="green",size=2) +
   geom_line(aes( y=prehigh,color = "Predicted Bound") ,linetype="twodash" )+
@@ -392,6 +417,16 @@ oneyearnum<-ggplot(data=estima2,aes(x=time) )+
         axis.text.x = element_text( size=14),
         axis.title = element_text(size=16))+
   theme(axis.title.x = element_blank())
+
+
+COL=c("Estimated" = "black",
+      'Credible Bound' = "steelblue",
+      'Credible Bound' = "steelblue",
+      "Observed" = "red",
+      "Predicted" = "green",
+      "Predicted Bound" = "darkgreen",
+      "Predicted Bound" = "darkgreen" 
+)
 
 oneyearrate<-ggplot(data=estima_r,aes(x=time) )+
   geom_line(aes( y=Estimated, color ="Estimated" ),size=1)+
@@ -457,10 +492,10 @@ cityct$Population=cityct$Population/1000000
 
 BUPincr<-resrate_6743$par
 BUPincr<-resnum_6743$par
-result4plotactnum<-data.frame(cbind(num=BUPincr*sd[1]+mu[1],subregion=combined_data$Place[1:100]))
+result4plotactnum<-data.frame(cbind(num=BUPincr*sd[1]+mu[1],subregion=final.data$Place[1:100]))
 BUPincr1<-as.numeric(result4plotactnum$num)
 
-result4plot<-data.frame(cbind(BUPincr1,subregion=combined_data$Place[1:100]))
+result4plot<-data.frame(cbind(BUPincr1,subregion=final.data$Place[1:100]))
 result4plot$subregion<-tolower(result4plot$subregion)
 map.data = merge(nc,result4plot,by.x="subregion",by.y="subregion")
 map.data$BUPincr1<-as.numeric(map.data$BUPincr1)
@@ -481,88 +516,82 @@ ggplot()+
 ################################################################################
 #####Three year optimiztion#####################################################
 ################################################################################
-p=dim(X)[2]
-ii=2
-nn=3
+
+
+p=4
+n=10000
 mu=mean(Bupdiff$Bupdiff[101:600])
 sd=sd(Bupdiff$Bupdiff[101:600])
-thetasave=array(NA, dim = c(100,9))#theta for each county each quarter
-{
+thetasave=array(NA, dim = c(100,12,n))#theta for each county each quarter
+ii=2
+nn=3
+cii=array(NA, dim = c(100,n))
+dii=array(NA, dim = c(100,n))
+eii=array(NA, dim = c(100,n))
+for (ll in 1:n) { 
   
-  epsilon<- colMeans(sampleused[[1]][,which(names(sampleused[[1]][1,])=='epsilon[1, 1]'):which(names(sampleused[[1]][1,])=='epsilon[100, 1]')])
-  s1<-colMeans(sampleused[[1]][,which(names(sampleused[[1]][1,])=='s1[1]'):(which(names(sampleused[[1]][1,])=='s1[100]'))])
-  s2<-colMeans(sampleused[[1]][,which(names(sampleused[[1]][1,])=='s2[1]'):(which(names(sampleused[[1]][1,])=='s2[100]'))])
-  postalpha0<-mean(sampleused[[1]][,'alpha0'])
-  postbeta0<-mean(sampleused[[1]][,'beta0'])
-  postbeta<-colMeans(sampleused[[1]][,which(names(sampleused[[1]][1,])=='beta[1]'):(which(names(sampleused[[1]][1,])=='beta[1]')+3)])
-  postalpha<-colMeans(sampleused[[1]][,which(names(sampleused[[1]][1,])=='alpha[1]'):(which(names(sampleused[[1]][1,])=='alpha[1]')+2)])
+  l=1*ll
+  epsilon<- sampleused[[1]][l,which(names(sampleused[[1]][1,])=='epsilon[1, 1]')
+                            :which(names(sampleused[[1]][1,])=='epsilon[100, 1]')]
+  s1<-sampleused[[1]][l,which(names(sampleused[[1]][1,])=='s1[1]')
+                      :(which(names(sampleused[[1]][1,])=='s1[100]'))]
+  s2<-sampleused[[1]][l,which(names(sampleused[[1]][1,])=='s2[1]')
+                      :(which(names(sampleused[[1]][1,])=='s2[100]'))]
   
-  
-  #postX=apply(postX1, c(1,2), mean)
+  postbeta0<-sampleused[[1]][l,'beta0']
+  postbeta<-sampleused[[1]][l,which(names(sampleused[[1]][1,])=='beta[1]')
+                            :(which(names(sampleused[[1]][1,])=='beta[1]')+3)]
+  postalpha<-sampleused[[1]][l,which(names(sampleused[[1]][1,])=='alpha[1]')
+                             :(which(names(sampleused[[1]][1,])=='alpha[1]')+2)]
+  postalpha0<-sampleused[[1]][l,'alpha0']
   postX<-matrix(sampleused[[1]][l,1:(p*600)],600, )
-  
   #q1
   postX100<-postX[1:100,]
   xalpha<-rep(postalpha0,100)+postX100[,1:3]%*%postalpha+rep(s1,1)+epsilon
-  thetasave[,1]<-exp(xalpha)*Exp[,1]
+  thetasave[,1,ll]<-exp(xalpha)*Exp[,1]
   theta_last<-exp(xalpha)*Exp[,1]
-  
-  mm<-seq(101,501,by=100)#101-3701 q2-q38
-  
+  mm<-seq(101,501,by=100)#
   for (m in mm) {
     postXmm<-postX[m:(m+99),]
     xbeta<-rep(postbeta0,100)+postXmm[,1:4]%*%postbeta+rep(s2,1)
-    thetasave[,(match(m,mm)+1)]<-exp(xbeta)*thetasave[,match(m,mm)]*Exp[,(match(m,mm)+1)]/Exp[,(match(m,mm))]
+    thetasave[,(match(m,mm)+1),ll]<-exp(xbeta)*thetasave[,match(m,mm),ll]*Exp[,(match(m,mm)+1)]/Exp[,(match(m,mm))]
     
   }
   
-  
-  
-  
-  
-  
-  postX3900<-cbind(rep(((0)-mu[1])/sd[1],100), postXmm[,ii:nn],rep(7 ,100))
-  postX4000<-cbind(rep(((0)-mu[1])/sd[1],100), postXmm[,ii:nn],rep(8 ,100))
-  postX4100<-cbind(rep(((0)-mu[1])/sd[1],100), postXmm[,ii:nn],rep(9 ,100))
-  xbeta39<-rep(postbeta0,100)+postX3900[,1:(p)]%*%postbeta+rep(s2,1)
-  xbeta40<-rep(postbeta0,100)+postX4000[,1:(p)]%*%postbeta+rep(s2,1)
-  xbeta41<-rep(postbeta0,100)+postX4100[,1:(p)]%*%postbeta+rep(s2,1)
-  thetasave[,7]<-exp(xbeta39)*thetasave[,6]*Exp[,6]/Exp[,6]
-  thetasave[,8]<-exp(xbeta40)*thetasave[,7]*Exp[,6]/Exp[,6]
-  thetasave[,9]<-exp(xbeta41)*thetasave[,8]*Exp[,6]/Exp[,6]
-  
+  #other terms than bupe
   postnext<-cbind( postXmm[,ii:nn],rep(7 ,100))
-  
-  
-  
+  cii[,ll]<-exp(rep(postbeta0,100)+postnext%*%postbeta[2:p]+rep(s2,1))*thetasave[,6,ll]
+  postnext1<-cbind( postXmm[,ii:nn],rep(8 ,100))
+  dii[,ll]<-exp(rep(postbeta0,100)+postnext1%*%postbeta[2:p]+rep(s2,1))
+  postnext2<-cbind( postXmm[,ii:nn],rep(9 ,100))
+  eii[,ll]<-exp(rep(postbeta0,100)+postnext2%*%postbeta[2:p]+rep(s2,1))
+
   
   
 }
 
+ci<-rowMeans(cii)
+di0<-rowMeans(dii)
+ei0<-rowMeans(eii)
 
+postbeta<-colMeans(sampleused[[1]][,which(names(sampleused[[1]][1,])=='beta[1]'):(which(names(sampleused[[1]][1,])=='beta[1]')+3)])
+beta1hat<-postbeta[1]
 
 fn4 <- function(x) 
 {
   
   
   obj = 0
-  #  grad=0
   for (i in 1:100) {
-    
-    ci<-exp(postbeta0+postnext[i,]%*%postbeta[2:p]+s2[i])*thetasave[i,6]
-    a=ci*exp(beta1hat*x[i])
-    
-    di<-exp(postbeta0+c(postXmm[i,ii:nn],8)%*%postbeta[2:p]+s2[i])*a
-    b=di*exp(beta1hat*x[i+100])
-    
-    ei<-exp(postbeta0+c(postXmm[i,ii:nn],9)%*%postbeta[2:p]+s2[i])*b
-    c=ei*exp(beta1hat*x[i+200])
-    
-    obj = obj + a+b+c 
+      a= ci[i]*exp(beta1hat*x[i])*(
+        1+(di0[i])*exp(beta1hat*x[i+100])+
+         (di0[i])*(ei0[i])*exp(beta1hat*x[i+100])*exp(beta1hat*x[i+200])) 
+    obj = obj + a
   }
   
   return(obj)
 }
+
 eqn4 <-function(x)
 {
   sumt = 0
@@ -579,8 +608,8 @@ ub <- rep((max(Bupdiff$Bupdiff[101:600])-(mean(Bupdiff$Bupdiff[101:600])))/
             sd(Bupdiff$Bupdiff[101:600]),300)
 
 x0 <- c(rep(0,300))
-fn4(x0)
-#fn4r(c(rep(-0.3669604,300)))
+fn4(c(rep((0-mu)/sd,300)))
+
 res3yr_num<-auglag(x0,
                    fn4,
                    heq = eqn4,
@@ -598,19 +627,14 @@ fn4r <- function(x)
   #  grad=0
   for (i in 1:100) {
     
-    ci<-exp(postbeta0+postnext[i,]%*%postbeta[2:p]+s2[i])*thetasave[i,6]
-    a=(ci*exp(beta1hat*x[i]))
-    
-    di<-exp(postbeta0+c(postXmm[i,ii:nn],8)%*%postbeta[2:p]+s2[i])*a
-    b=(di*exp(beta1hat*x[i+100]))
-    
-    ei<-exp(postbeta0+c(postXmm[i,ii:nn],9)%*%postbeta[2:p]+s2[i])*b
-    c=(ei*exp(beta1hat*x[i+200]))
-    
-    obj = obj +( a+b+c)/Exp[i,6]
+    a= ci[i]*exp(beta1hat*x[i])*(
+      1+(di0[i])*exp(beta1hat*x[i+100])+
+        (di0[i])*(ei0[i])*exp(beta1hat*x[i+100])*exp(beta1hat*x[i+200])) 
+
+    obj = obj +(a)/Exp[i,6]    
   }
   
-  return(obj)
+  return(obj/100)
 }
 eqn4r <-function(x)
 {
@@ -623,8 +647,11 @@ eqn4r <-function(x)
   
 }
 
+
+fn4r(c(rep((0-mu)/sd,300)))
+
 #three year rate version
-res3yr_rate99<-auglag(x0,
+res3yr_rate<-auglag(x0,
                       fn4r,
                       heq = eqn4r,
                       lower          = lb,
@@ -690,11 +717,7 @@ for (ll in 1:n) {
   thetasave[,8,ll]<-exp(xbeta40)*thetasave[,7,ll]*Exp[,6]/Exp[,6]
   thetasave[,9,ll]<-exp(xbeta41)*thetasave[,8,ll]*Exp[,6]/Exp[,6]
   
-  #postX3900x<-cbind(resrate_1$par, postXmm[,ii:nn],rep(7 ,100))
-  
-  # postX3900x<-cbind(bun_rate2000$par, postXmm[,ii:nn],rep(7 ,100))
-  # postX3900x<-cbind(resnum_2000$par, postXmm[,ii:nn],rep(7 ,100))
-  
+
   
   postX3900x<-cbind(res3yr_num$par[1:100], postXmm[,ii:nn],rep(7 ,100))
   postX4000x<-cbind(res3yr_num$par[101:200], postXmm[,ii:nn],rep(8 ,100))
@@ -709,6 +732,16 @@ for (ll in 1:n) {
   
   
 }
+
+
+#probability for 2022, 23, 24
+statesum<-apply(thetasave[,10,],2, sum)+apply(thetasave[,11,],2,sum)+apply(thetasave[,12,],2, sum)
+statebase<-apply(thetasave[,7,],2,sum)+apply(thetasave[,8,],2,sum)+apply(thetasave[,9,],2,sum)
+length(which((statebase-statesum)>0))
+
+
+
+
 # three year rate 
 for (ll in 1:n) { 
   
@@ -766,9 +799,9 @@ for (ll in 1:n) {
   # postX3900x<-cbind(resnum_2000$par, postXmm[,ii:nn],rep(7 ,100))
   
   
-  postX3900x<-cbind(res3yr_rate99$par[1:100], postXmm[,ii:nn],rep(7 ,100))
-  postX4000x<-cbind(res3yr_rate99$par[101:200], postXmm[,ii:nn],rep(8 ,100))
-  postX4100x<-cbind(res3yr_rate99$par[201:300], postXmm[,ii:nn],rep(9 ,100))
+  postX3900x<-cbind(res3yr_rate$par[1:100], postXmm[,ii:nn],rep(7 ,100))
+  postX4000x<-cbind(res3yr_rate$par[101:200], postXmm[,ii:nn],rep(8 ,100))
+  postX4100x<-cbind(res3yr_rate$par[201:300], postXmm[,ii:nn],rep(9 ,100))
   xbeta39x<-rep(postbeta0,100)+postX3900x[,1:(p)]%*%postbeta+rep(s2,1)
   xbeta40x<-rep(postbeta0,100)+postX4000x[,1:(p)]%*%postbeta+rep(s2,1)
   xbeta41x<-rep(postbeta0,100)+postX4100x[,1:(p)]%*%postbeta+rep(s2,1)
@@ -779,6 +812,13 @@ for (ll in 1:n) {
   
   
 }
+
+
+#probability for 2022, 23, 24
+statesum<-apply(thetasave[,10,],2, sum)+apply(thetasave[,11,],2,sum)+apply(thetasave[,12,],2, sum)
+statebase<-apply(thetasave[,7,],2,sum)+apply(thetasave[,8,],2,sum)+apply(thetasave[,9,],2,sum)
+length(which((statebase-statesum)>0))
+
 
 
 
@@ -821,6 +861,7 @@ estimathreeyear<-data.frame(time=c(2016:2024),Estimated=colSums(mean), 'Upper Bo
                             Predicted=c(rep(NA,6),colSums(Predicted)),
                             prehigh=c(rep(NA,6),colSums(prehigh)),
                             prelow=c(rep(NA,6),colSums(prelow)))
+newexp<-cbind(Exp,Exp[,6],Exp[,6],Exp[,6],Exp[,6],Exp[,6],Exp[,6])
 
 estimathreeyearrate<-data.frame(time=c(2016:2024),Estimated=colMeans(mean/newexp[,1:9]), 'Upper Bound'=colMeans(high/newexp[,1:9]),
                                 'Lower Bound'=colMeans(low/newexp[,1:9]), Observed=c(colMeans(y[,1:6]/Exp,na.rm = T),rep(NA,3)),
@@ -881,28 +922,27 @@ BUPincr<-res3yr_num$par[201:300]
 BUPincr<-res3yr_rate$par[1:100]
 BUPincr<-res3yr_rate$par[101:200]
 BUPincr<-res3yr_rate$par[201:300]
-res3yr_rate99
-BUPincr<-res3yr_rate99$par[1:100]
-BUPincr<-res3yr_rate99$par[101:200]
-BUPincr<-res3yr_rate99$par[201:300]
+
+
+
+#map 
+usa_counties = map_data("county")
 nc = subset(usa_counties, region == "north carolina") 
 library(ggpubr)
 
 
-result4plotactnum<-data.frame(cbind(num=BUPincr*sd[1]+mu[1],subregion=combined_data$Place[1:100]))
+result4plotactnum<-data.frame(cbind(num=BUPincr*sd[1]+mu[1],subregion=final.data$Place[1:100]))
 BUPincr1<-as.numeric(result4plotactnum$num)
 
-result4plot<-data.frame(cbind(BUPincr1,subregion=combined_data$Place[1:100]))
+result4plot<-data.frame(cbind(BUPincr1,subregion=final.data$Place[1:100]))
 result4plot$subregion<-tolower(result4plot$subregion)
 map.data = merge(nc,result4plot,by.x="subregion",by.y="subregion")
 map.data$BUPincr1<-as.numeric(map.data$BUPincr1)
-Rallocation2024<-ggplot()+
+allocation2024<-ggplot()+
   geom_polygon(data=map.data,aes(x=long,y=lat,group=subregion,fill=BUPincr1),color='black',alpha=.8,size=.3)+
   scale_fill_gradient2(name="Increase",low='white',high='darkblue')+
   geom_point(data=cityct,aes(x=long, y=lat,size=Population),shape = 17,color="pink") +
-  #geom_text(data= cityct,aes(x=long, y=lat-0.1, label=city),
-  #         color = "black", size=4, check_overlap = FALSE)+
-  coord_map()+
+   coord_map()+
   theme_void()
 ggpubr::ggarrange(allocation2022,allocation2023,allocation2024,
                   ncol = 1,common.legend=T,legend ="right")
