@@ -167,6 +167,7 @@ n=10000
 mu=mean(Bupdiff$Bupdiff[101:600])
 sd=sd(Bupdiff$Bupdiff[101:600])
 thetasave=array(NA, dim = c(100,12,n))
+s.y.new=array(NA, dim = c(100,12,n))
 #theta for each county each quarter,
 #thetasave[,7:9,] are baseline 10:12 are prediction with optimal solution
 
@@ -235,8 +236,26 @@ for (ll in 1:n) {
   thetasave[,11,ll]<-exp(xbeta40x)*thetasave[,10,ll]*Exp[,6]/Exp[,6]
   thetasave[,12,ll]<-exp(xbeta41x)*thetasave[,11,ll]*Exp[,6]/Exp[,6]
   
+  post.theta0<-c(thetasave[,1,ll],thetasave[,2,ll],thetasave[,3,ll],
+                thetasave[,4,ll],thetasave[,5,ll],thetasave[,6,ll],
+                thetasave[,7,ll],thetasave[,8,ll],thetasave[,9,ll],
+                thetasave[,10,ll],thetasave[,11,ll],thetasave[,12,ll])
   
+  post.theta<- matrix(rep(post.theta0,50), ncol = 50)
+
+  s.y.new[,,ll] <-  rowMeans(matrix( rpois(length(post.theta), post.theta) ,ncol = 50))
+    
+   
+# apply(rpois(length(post.theta), post.theta), 3, mean) 
   
+  # for (i in 1:12) {
+  #   if(!is.na(post.theta[i])){
+  #     s.y.new[,i,ll]<-mean(rpois(50,post.theta[i]))
+  #   } else
+  #     s.y.new[,i,ll]<-NA
+  #   
+  # }
+  # 
 }
 
 
@@ -262,6 +281,20 @@ length(which((statebase-statesum)>0))
 
 statesum<-apply(thetasave[,12,],2, sum)
 statebase<-0.8*apply(thetasave[,6,],2,sum)
+length(which((statebase-statesum)>0))
+
+
+statesum<-apply(s.y.new[,12,],2, sum)
+statebase<-apply(s.y.new[,9,],2,sum)
+length(which((statebase-statesum)>0))
+
+statesum<-apply(s.y.new[,12,],2, sum)
+statebase<-0.8*apply(s.y.new[,9,],2,sum)
+length(which((statebase-statesum)>0))
+
+
+statesum<-apply(s.y.new[,12,],2, sum)
+statebase<-0.8*apply(s.y.new[,6,],2,sum)
 length(which((statebase-statesum)>0))
 
 
@@ -677,9 +710,11 @@ p=4
 mu=mean(Bupdiff$Bupdiff[101:600])
 sd=sd(Bupdiff$Bupdiff[101:600])
 thetasave=array(NA, dim = c(100,12,n))#theta for each county each quarter
+s.y.new=array(NA, dim = c(100,12,n))
 ii=2
 nn=3
 
+set.seed(12345)
 # three years
 for (ll in 1:n) { 
   
@@ -743,6 +778,14 @@ for (ll in 1:n) {
   thetasave[,11,ll]<-exp(xbeta40x)*thetasave[,10,ll]*Exp[,6]/Exp[,6]
   thetasave[,12,ll]<-exp(xbeta41x)*thetasave[,11,ll]*Exp[,6]/Exp[,6]
   
+  post.theta0<-c(thetasave[,1,ll],thetasave[,2,ll],thetasave[,3,ll],
+                 thetasave[,4,ll],thetasave[,5,ll],thetasave[,6,ll],
+                 thetasave[,7,ll],thetasave[,8,ll],thetasave[,9,ll],
+                 thetasave[,10,ll],thetasave[,11,ll],thetasave[,12,ll])
+  
+  post.theta<- matrix(rep(post.theta0,100), ncol = 100)
+  
+  s.y.new[,,ll] <-  rowMeans(matrix( rpois(length(post.theta), post.theta) ,ncol = 100))
   
   
 }
@@ -770,6 +813,21 @@ length(which((statebase-statesum)>0))
 statesum<-apply(thetasave[,12,],2, sum)
 statebase<-0.8*apply(thetasave[,6,],2,sum)
 length(which((statebase-statesum)>0))
+
+
+statesum<-apply(s.y.new[,12,],2, sum)
+statebase<-apply(s.y.new[,9,],2,sum)
+length(which((statebase-statesum)>0))
+
+statesum<-apply(s.y.new[,12,],2, sum)
+statebase<-0.8*apply(s.y.new[,9,],2,sum)
+length(which((statebase-statesum)>0))
+
+
+statesum<-apply(s.y.new[,12,],2, sum)
+statebase<-0.8*apply(s.y.new[,6,],2,sum)
+length(which((statebase-statesum)>0))
+
 
 
 # three year rate 
@@ -838,6 +896,8 @@ for (ll in 1:n) {
   thetasave[,10,ll]<-exp(xbeta39x)*thetasave[,6,ll]*Exp[,6]/Exp[,6]
   thetasave[,11,ll]<-exp(xbeta40x)*thetasave[,10,ll]*Exp[,6]/Exp[,6]
   thetasave[,12,ll]<-exp(xbeta41x)*thetasave[,11,ll]*Exp[,6]/Exp[,6]
+  
+
   
   
   
