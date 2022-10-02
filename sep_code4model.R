@@ -139,7 +139,7 @@ result_sep172<- runMCMC( cMCMC, niter = 1500000, nburnin = 1000000,summary = F
                          ,samplesAsCodaMCMC = T, nchains = 2,thin=50)
 
 #saveRDS(result_sep172,file = "result_sep172.rda")
-#result_sep172<-readRDS(file = "result_sep172.rda")
+result_sep172<-readRDS(file = "result_sep172.rda")
 
 
 
@@ -214,8 +214,11 @@ ggplot()+
 
 n=10000#posterior sample size
 s.y.new=matrix(0,600,n)
+
 s.addone=array(NA, dim = c(100,100,n))
 thetasave=array(NA, dim = c(100,9,n))#theta for each county each quarter
+ss.y.new=array(NA, dim = c(100,9,n))#theta for each county each quarter
+
 #####addone
 theta_year_num=array(NA, dim = c(100,4,n))#estimate using number for next year
 theta_year_rate=array(NA, dim = c(100,4,n)) #estimate using rate(number/pop) for next year
@@ -225,7 +228,7 @@ mu=mean(Bupdiff$Bupdiff[101:600])
 sd=sd(Bupdiff$Bupdiff[101:600])
 ii=2
 nn=3
-
+set.seed(12345)
 for (ll in 1:n) { 
   
   l=1*ll
@@ -264,7 +267,6 @@ for (ll in 1:n) {
     
   }
   
-  
   post.theta<-c(thetasave[,1,ll],thetasave[,2,ll],thetasave[,3,ll],
                 thetasave[,4,ll],thetasave[,5,ll],thetasave[,6,ll])
   # y.new<-matrix(0,300,1)
@@ -274,37 +276,42 @@ for (ll in 1:n) {
     } else
       c[i,ll]<-NA
     
-   
+    
     
   }
-
   
-  postX3900<-cbind(rep(((0)-mu[1])/sd[1],100), postXmm[,ii:nn],rep(7 ,100))
-  postX4000<-cbind(rep(((0)-mu[1])/sd[1],100), postXmm[,ii:nn],rep(8 ,100))
-  postX4100<-cbind(rep(((0)-mu[1])/sd[1],100), postXmm[,ii:nn],rep(9 ,100))
-  xbeta39<-rep(postbeta0,100)+postX3900[,1:(p)]%*%postbeta+rep(s2,1)
-  xbeta40<-rep(postbeta0,100)+postX4000[,1:(p)]%*%postbeta+rep(s2,1)
-  xbeta41<-rep(postbeta0,100)+postX4100[,1:(p)]%*%postbeta+rep(s2,1)
-  thetasave[,7,ll]<-exp(xbeta39)*thetasave[,6,ll]*Exp[,6]/Exp[,6]
-  thetasave[,8,ll]<-exp(xbeta40)*thetasave[,7,ll]*Exp[,6]/Exp[,6]
-  thetasave[,9,ll]<-exp(xbeta41)*thetasave[,8,ll]*Exp[,6]/Exp[,6]
+  postX700<-cbind(rep(((0)-mu[1])/sd[1],100), postXmm[,ii:nn],rep(7 ,100))
+  postX800<-cbind(rep(((0)-mu[1])/sd[1],100), postXmm[,ii:nn],rep(8 ,100))
+  postX900<-cbind(rep(((0)-mu[1])/sd[1],100), postXmm[,ii:nn],rep(9 ,100))
+  xbeta7<-rep(postbeta0,100)+postX700[,1:(p)]%*%postbeta+rep(s2,1)
+  xbeta8<-rep(postbeta0,100)+postX800[,1:(p)]%*%postbeta+rep(s2,1)
+  xbeta9<-rep(postbeta0,100)+postX900[,1:(p)]%*%postbeta+rep(s2,1)
+  thetasave[,7,ll]<-exp(xbeta7)*thetasave[,6,ll]*Exp[,6]/Exp[,6]
+  thetasave[,8,ll]<-exp(xbeta8)*thetasave[,7,ll]*Exp[,6]/Exp[,6]
+  thetasave[,9,ll]<-exp(xbeta9)*thetasave[,8,ll]*Exp[,6]/Exp[,6]
+  
+  
+  for (k in 1:9) {
+    ss.y.new[,k,ll]<- rpois(length(thetasave[,k,ll]),thetasave[,k,ll])
+  }
   
   
 }
+
 low=matrix(NA, nrow = 100,ncol = 9)
 high=matrix(NA, nrow = 100,ncol = 9)
 mean=matrix(NA, nrow = 100,ncol = 9)
 
 thetamean9<-matrix(0,100,9)
 for (i in 1:100) {
-  thetamean9[i,]= rowMeans(thetasave[i,1:9,],na.rm = T)
+  thetamean9[i,]= rowMeans(ss.y.new[i,1:9,],na.rm = T)
   
 }
 for (i in 1:100) {
   for (j in 1:9) {
-    low[i,j]= hdi(thetasave[i,j,])[1]
-    high[i,j]= hdi(thetasave[i,j,])[2]
-    mean[i,j]=mean(thetasave[i,j,],na.rm = T)
+    low[i,j]= hdi(ss.y.new[i,j,])[1]
+    high[i,j]= hdi(ss.y.new[i,j,])[2]
+    mean[i,j]=mean(ss.y.new[i,j,],na.rm = T)
   }
 }
 
@@ -321,7 +328,7 @@ mean(d0.mean>ds.mean)
 
 
 
-y=matrix(as.numeric(bup_patient$death),nrow=100,byrow=F)
+y=matrix(as.numeric(final.data$death),nrow=100,byrow=F)
 estima2<-data.frame(time=c(2016:2024),Estimated=colSums(mean), 'Upper Bound'=colSums(high),
                     'Lower Bound'=colSums(low), Observed=c(colSums(y[,1:6],na.rm = T),rep(NA,3))
                     #Predicted=c(rep(NA,24),thetamean[1,])
@@ -338,17 +345,19 @@ estima_r<-data.frame(time=c(2016:2024),Estimated=colMeans(mean/newexp[,1:9]), 'U
 
 
 COL=c("Estimated" = "black",
-      'Credible Bound' = "steelblue",
+    #  'Credible Bound' = "steelblue",
       "Observed" = "red")
-basenum<-ggplot(data=estima_r,aes(x=time) )+
+basenum<-ggplot(data=estima2,aes(x=time) )+
   geom_line(aes( y=Estimated, color ="Estimated" ),size=1)+
-  geom_line(aes( y=Upper.Bound,color ='Credible Bound') ,linetype="twodash" )+
-  geom_line(aes( y=Lower.Bound ,color ='Credible Bound'), linetype="twodash" )+
+  geom_ribbon(aes(ymin=Lower.Bound, ymax=Upper.Bound),fill="grey70", alpha=0.2)+
+  
+  #geom_line(aes( y=Upper.Bound,color ='Credible Bound') ,linetype="twodash" )+
+  #geom_line(aes( y=Lower.Bound ,color ='Credible Bound'), linetype="twodash" )+
   geom_line(aes( y=Observed ,color ="Observed"))+
   labs(color = '')+
   scale_color_manual(values = COL)+
   geom_point(aes(x=time, y=Observed ),shape = 23,fill="red",size=2) +
-  labs(x = "Year", y="R")+
+  labs(x = "Year", y="Number")+
   theme_classic()+
   theme(legend.position = c(0.3, 0.8),   
         legend.title = element_blank(), 
@@ -361,8 +370,10 @@ basenum<-ggplot(data=estima_r,aes(x=time) )+
 
 baserate<-ggplot(data=estima_r,aes(x=time) )+
   geom_line(aes( y=Estimated, color ="Estimated" ),size=1)+
-  geom_line(aes( y=Upper.Bound,color ='Credible Bound') ,linetype="twodash" )+
-  geom_line(aes( y=Lower.Bound ,color ='Credible Bound'), linetype="twodash" )+
+  geom_ribbon(aes(ymin=Lower.Bound, ymax=Upper.Bound),fill="grey70", alpha=0.2)+
+  
+  #geom_line(aes( y=Upper.Bound,color ='Credible Bound') ,linetype="twodash" )+
+  #geom_line(aes( y=Lower.Bound ,color ='Credible Bound'), linetype="twodash" )+
   geom_line(aes( y=Observed ,color ="Observed"))+
   labs(color = '')+
   scale_color_manual(values = COL)+

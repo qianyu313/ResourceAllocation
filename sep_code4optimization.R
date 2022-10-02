@@ -1,7 +1,7 @@
 library(nloptr)
 library(xtable)
 
-#rm(list = ls())
+rm(list = ls())
 set.seed(12345)
 
 
@@ -194,7 +194,7 @@ sd=sd(Bupdiff$Bupdiff[101:600])
 thetasave=array(NA, dim = c(100,12,n))
 #theta(poisson mean) for each county each quarter,
 #thetasave[,7:9,] are baseline 10:12 are prediction with optimal solution
-s.y.new=array(NA, dim = c(100,3,n))# the same for s.y.new
+s.y.new=array(NA, dim = c(100,12,n))# the same for s.y.new
 
 set.seed(12345)
 # one year num 
@@ -251,42 +251,36 @@ for (ll in 1:n) {
   #               thetasave[,4,ll],thetasave[,5,ll],thetasave[,6,ll],
   #               thetasave[,7,ll],thetasave[,8,ll],thetasave[,9,ll],
   #               thetasave[,10,ll],thetasave[,11,ll],thetasave[,12,ll])
-    s.y.new[,1,ll]<- rpois(length(thetasave[,10,ll]),thetasave[,10,ll])
-    s.y.new[,2,ll]<- rpois(length(thetasave[,11,ll]),thetasave[,11,ll])
-    s.y.new[,3,ll]<- rpois(length(thetasave[,12,ll]), thetasave[,12,ll])
+  
+  for (k in 1:12) {
+    s.y.new[,k,ll]<- rpois(length(thetasave[,k,ll]),thetasave[,k,ll])
+  }
+
+  
 
 }
 
 
 
-#probability for 2022
-statesum<-apply(thetasave[,10,],2, sum)
-statebase<-apply(thetasave[,7,],2,sum)
-length(which((statebase-statesum)>0))
-#probability for 2022, 23, 24
-statesum<-apply(thetasave[,10,],2, sum)+apply(thetasave[,11,],2, sum)+apply(thetasave[,12,],2, sum)
-statebase<-apply(thetasave[,7,],2,sum)+apply(thetasave[,8,],2,sum)+apply(thetasave[,9,],2,sum)
-length(which((statebase-statesum)>0))
+# #probability for 2022
+# statesum<-apply(thetasave[,10,],2, sum)
+# statebase<-apply(thetasave[,7,],2,sum)
+# length(which((statebase-statesum)>0))
+# #probability for 2022, 23, 24
+# statesum<-apply(thetasave[,10,],2, sum)+apply(thetasave[,11,],2, sum)+apply(thetasave[,12,],2, sum)
+# statebase<-apply(thetasave[,7,],2,sum)+apply(thetasave[,8,],2,sum)+apply(thetasave[,9,],2,sum)
+# length(which((statebase-statesum)>0))
+# 
 
-
-#2021
-statesum<-apply(s.y.new[,3,],2, sum)
-statebase<-apply(thetasave[,6,],2,sum)
-length(which((statebase-statesum)>0))
-
-#2021  0.8
-statesum<-apply(s.y.new[,3,],2, sum)
-statebase<-0.8*apply(thetasave[,6,],2,sum)
-length(which((statebase-statesum)>0))
 
 #2024
-statesum<-apply(s.y.new[,3,],2, sum)
-statebase<-apply(thetasave[,9,],2,sum)
+statesum<-apply(s.y.new[,12,],2, sum)
+statebase<-apply(s.y.new[,9,],2,sum)
 length(which((statebase-statesum)>0))
 
 #2024 0.8
-statesum<-apply(s.y.new[,3,],2, sum)
-statebase<-0.8*apply(thetasave[,9,],2,sum)
+statesum<-apply(s.y.new[,12,],2, sum)
+statebase<-0.8*apply(s.y.new[,9,],2,sum)
 length(which((statebase-statesum)>0))
 
 
@@ -303,33 +297,33 @@ prelow=matrix(NA, nrow = 100,ncol = 3)
 
 thetamean9<-matrix(0,100,9)
 for (i in 1:100) {
-  thetamean9[i,]= rowMeans(thetasave[i,1:9,],na.rm = T)
+  thetamean9[i,]= rowMeans(s.y.new[i,1:9,],na.rm = T)
   
 }
 
 for (i in 1:100) {
   for (j in 1:9) {
-    low[i,j]= hdi(thetasave[i,j,])[1]
-    high[i,j]= hdi(thetasave[i,j,])[2]
-    mean[i,j]=mean(thetasave[i,j,],na.rm = T)
+    low[i,j]= hdi(s.y.new[i,j,])[1]
+    high[i,j]= hdi(s.y.new[i,j,])[2]
+    mean[i,j]=mean(s.y.new[i,j,],na.rm = T)
+  }
+}
+
+for (i in 1:100) {
+  for (j in 1:3) {
+    prehigh[i,j]=hdi(s.y.new[i,(9+j),])[1]
+    prelow[i,j]= hdi(s.y.new[i,(9+j),])[2]
+    Predicted[i,j]=mean(s.y.new[i,(9+j),],na.rm = T)
   }
 }
 
 # for (i in 1:100) {
 #   for (j in 1:3) {
-#     prehigh[i,j]=hdi(thetasave[i,(9+j),])[1]
-#     prelow[i,j]= hdi(thetasave[i,(9+j),])[2]
-#     Predicted[i,j]=mean(thetasave[i,(9+j),],na.rm = T)
+#     prehigh[i,j]=hdi(s.y.new[i,j,])[1]
+#     prelow[i,j]= hdi(s.y.new[i,j,])[2]
+#     Predicted[i,j]=mean(s.y.new[i,j,],na.rm = T)
 #   }
 # }
-
-for (i in 1:100) {
-  for (j in 1:3) {
-    prehigh[i,j]=hdi(s.y.new[i,j,])[1]
-    prelow[i,j]= hdi(s.y.new[i,j,])[2]
-    Predicted[i,j]=mean(s.y.new[i,j,],na.rm = T)
-  }
-}
 
 
 
@@ -344,21 +338,11 @@ estima2<-data.frame(time=c(2016:2024),Estimated=colSums(mean), 'Upper Bound'=col
 
 
 
-newexp<-cbind(Exp,Exp[,6],Exp[,6],Exp[,6],Exp[,6],Exp[,6],Exp[,6])
-# use one year rate, then repeat line 379-413
-estima_r<-data.frame(time=c(2016:2024),Estimated=colMeans(mean/newexp[,1:9]), 'Upper Bound'=colMeans(high/newexp[,1:9]),
-                     'Lower Bound'=colMeans(low/newexp[,1:9]), Observed=c(colMeans(y[,1:6]/Exp,na.rm = T),rep(NA,3)),
-                     Predicted=c(rep(NA,6),colMeans(Predicted/newexp[,10:12])),
-                     prehigh=c(rep(NA,6),colMeans(prehigh/newexp[,10:12])), 
-                     prelow=c(rep(NA,6),colMeans(prelow/newexp[,10:12])))
-
-
-
 COL=c("Estimated" = "black",
      # 'Credible Bound' = "steelblue",
     #  'Credible Bound' = "steelblue",
       "Observed" = "red",
-      "Predicted" = "green"
+      "Predicted" = "darkgreen"
      # "Predicted Bound" = "darkgreen",
     #  "Predicted Bound" = "darkgreen" 
 )
@@ -523,7 +507,6 @@ xtable(rateTABLE, type = "latex", file = "result4plot.tex")
 
 
 
-set.seed(12345)
 p=4
 n=10000
 ii=2
@@ -531,7 +514,8 @@ nn=3
 mu=mean(Bupdiff$Bupdiff[101:600])
 sd=sd(Bupdiff$Bupdiff[101:600])
 thetasave=array(NA, dim = c(100,12,n))
-s.y.new=array(NA, dim = c(100,3,n))
+s.y.new=array(NA, dim = c(100,12,n))
+set.seed(12345)
 
 for (ll in 1:n) { 
   
@@ -589,33 +573,37 @@ for (ll in 1:n) {
   thetasave[,10,ll]<-exp(xbeta10)*thetasave[,6,ll]*Exp[,6]/Exp[,6]
   thetasave[,11,ll]<-exp(xbeta11)*thetasave[,10,ll]*Exp[,6]/Exp[,6]
   thetasave[,12,ll]<-exp(xbeta12)*thetasave[,11,ll]*Exp[,6]/Exp[,6]
-  s.y.new[,1,ll]<- rpois(length(thetasave[,10,ll]),thetasave[,10,ll])
-  s.y.new[,2,ll]<- rpois(length(thetasave[,11,ll]),thetasave[,11,ll])
-  s.y.new[,3,ll]<- rpois(length(thetasave[,12,ll]), thetasave[,12,ll])
+ # s.y.new[,1,ll]<- rpois(length(thetasave[,10,ll]),thetasave[,10,ll])
+  #s.y.new[,2,ll]<- rpois(length(thetasave[,11,ll]),thetasave[,11,ll])
+  #s.y.new[,3,ll]<- rpois(length(thetasave[,12,ll]), thetasave[,12,ll])
+  
+  for (k in 1:12) {
+    s.y.new[,k,ll]<- rpois(length(thetasave[,k,ll]),thetasave[,k,ll])
+  }
   
   
   
 }
 
 
-#2021
-statesumR<-apply(apply(s.y.new[,3,], 2, '/',Exp[,6]),2, sum)
-statebaseR<-apply(apply(thetasave[,6,], 2, '/',Exp[,6]),2, sum)
-length(which((statebaseR-statesumR)>0))
-
-
-statesumR<-apply(apply(s.y.new[,3,], 2, '/',Exp[,6]),2, sum)
-statebaseR<-0.8*apply(apply(thetasave[,6,], 2, '/',Exp[,6]),2, sum)
-length(which((statebaseR-statesumR)>0))
+# #2021
+# statesumR<-apply(apply(s.y.new[,3,], 2, '/',Exp[,6]),2, sum)
+# statebaseR<-apply(apply(thetasave[,6,], 2, '/',Exp[,6]),2, sum)
+# length(which((statebaseR-statesumR)>0))
+# 
+# 
+# statesumR<-apply(apply(s.y.new[,3,], 2, '/',Exp[,6]),2, sum)
+# statebaseR<-0.8*apply(apply(thetasave[,6,], 2, '/',Exp[,6]),2, sum)
+# length(which((statebaseR-statesumR)>0))
 
 #2024
-statesumR<-apply(apply(s.y.new[,3,], 2, '/',Exp[,6]),2, sum)
-statebaseR<-apply(apply(thetasave[,9,], 2, '/',Exp[,6]),2, sum)
+statesumR<-apply(apply(s.y.new[,12,], 2, '/',Exp[,6]),2, sum)
+statebaseR<-apply(apply(s.y.new[,9,], 2, '/',Exp[,6]),2, sum)
 length(which((statebaseR-statesumR)>0))
 
 
-statesumR<-apply(apply(s.y.new[,3,], 2, '/',Exp[,6]),2, sum)
-statebaseR<-0.8*apply(apply(thetasave[,9,], 2, '/',Exp[,6]),2, sum)
+statesumR<-apply(apply(s.y.new[,12,], 2, '/',Exp[,6]),2, sum)
+statebaseR<-0.8*apply(apply(s.y.new[,9,], 2, '/',Exp[,6]),2, sum)
 length(which((statebaseR-statesumR)>0))
 
 
@@ -632,33 +620,33 @@ prelow=matrix(NA, nrow = 100,ncol = 3)
 
 thetamean9<-matrix(0,100,9)
 for (i in 1:100) {
-  thetamean9[i,]= rowMeans(thetasave[i,1:9,],na.rm = T)
+  thetamean9[i,]= rowMeans(s.y.new[i,1:9,],na.rm = T)
   
 }
 
 for (i in 1:100) {
   for (j in 1:9) {
-    low[i,j]= hdi(thetasave[i,j,])[1]
-    high[i,j]= hdi(thetasave[i,j,])[2]
-    mean[i,j]=mean(thetasave[i,j,],na.rm = T)
+    low[i,j]= hdi(s.y.new[i,j,])[1]
+    high[i,j]= hdi(s.y.new[i,j,])[2]
+    mean[i,j]=mean(s.y.new[i,j,],na.rm = T)
+  }
+}
+
+for (i in 1:100) {
+  for (j in 1:3) {
+    prehigh[i,j]=hdi(s.y.new[i,(9+j),])[1]
+    prelow[i,j]= hdi(s.y.new[i,(9+j),])[2]
+    Predicted[i,j]=mean(s.y.new[i,(9+j),],na.rm = T)
   }
 }
 
 # for (i in 1:100) {
 #   for (j in 1:3) {
-#     prehigh[i,j]=hdi(thetasave[i,(9+j),])[1]
-#     prelow[i,j]= hdi(thetasave[i,(9+j),])[2]
-#     Predicted[i,j]=mean(thetasave[i,(9+j),],na.rm = T)
+#     prehigh[i,j]=hdi(s.y.new[i,j,])[1]
+#     prelow[i,j]= hdi(s.y.new[i,j,])[2]
+#     Predicted[i,j]=mean(s.y.new[i,j,],na.rm = T)
 #   }
 # }
-
-for (i in 1:100) {
-  for (j in 1:3) {
-    prehigh[i,j]=hdi(s.y.new[i,j,])[1]
-    prelow[i,j]= hdi(s.y.new[i,j,])[2]
-    Predicted[i,j]=mean(s.y.new[i,j,],na.rm = T)
-  }
-}
 
 
 
@@ -679,7 +667,7 @@ COL=c("Estimated" = "black",
       #'Credible Bound' = "steelblue",
       #'Credible Bound' = "steelblue",
       "Observed" = "red",
-      "Predicted" = "green"
+      "Predicted" = "darkgreen"
       #,
       #"Predicted Bound" = "darkgreen",
      # "Predicted Bound" = "darkgreen" 
@@ -861,7 +849,7 @@ p=4
 mu=mean(Bupdiff$Bupdiff[101:600])
 sd=sd(Bupdiff$Bupdiff[101:600])
 thetasave=array(NA, dim = c(100,12,n))#theta for each county each quarter
-s.y.new=array(NA, dim = c(100,3,n))
+s.y.new=array(NA, dim = c(100,12,n))
 ii=2
 nn=3
 
@@ -928,10 +916,13 @@ for (ll in 1:n) {
   thetasave[,10,ll]<-exp(xbeta10)*thetasave[,6,ll]*Exp[,6]/Exp[,6]
   thetasave[,11,ll]<-exp(xbeta11)*thetasave[,10,ll]*Exp[,6]/Exp[,6]
   thetasave[,12,ll]<-exp(xbeta12)*thetasave[,11,ll]*Exp[,6]/Exp[,6]
-  s.y.new[,1,ll]<- rpois(length(thetasave[,10,ll]),thetasave[,10,ll])
-  s.y.new[,2,ll]<- rpois(length(thetasave[,11,ll]),thetasave[,11,ll])
-  s.y.new[,3,ll]<- rpois(length(thetasave[,12,ll]), thetasave[,12,ll])
+ # s.y.new[,1,ll]<- rpois(length(thetasave[,10,ll]),thetasave[,10,ll])
+  #s.y.new[,2,ll]<- rpois(length(thetasave[,11,ll]),thetasave[,11,ll])
+  #s.y.new[,3,ll]<- rpois(length(thetasave[,12,ll]), thetasave[,12,ll])
   
+  for (k in 1:12) {
+    s.y.new[,k,ll]<- rpois(length(thetasave[,k,ll]),thetasave[,k,ll])
+  }
 
 }
 
@@ -950,24 +941,15 @@ for (ll in 1:n) {
 # length(which((statebase-statesum)>0))
 # 
 
-#2021
-statesum<-apply(s.y.new[,3,],2, sum)
-statebase<-apply(thetasave[,6,],2,sum)
-length(which((statebase-statesum)>0))
-
-#2021  0.8
-statesum<-apply(s.y.new[,3,],2, sum)
-statebase<-0.8*apply(thetasave[,6,],2,sum)
-length(which((statebase-statesum)>0))
 
 #2024
-statesum<-apply(s.y.new[,3,],2, sum)
-statebase<-apply(thetasave[,9,],2,sum)
+statesum<-apply(s.y.new[,12,],2, sum)
+statebase<-apply(s.y.new[,9,],2,sum)
 length(which((statebase-statesum)>0))
 
 #2024 0.8
-statesum<-apply(s.y.new[,3,],2, sum)
-statebase<-0.8*apply(thetasave[,9,],2,sum)
+statesum<-apply(s.y.new[,12,],2, sum)
+statebase<-0.8*apply(s.y.new[,9,],2,sum)
 length(which((statebase-statesum)>0))
 
 
@@ -985,35 +967,35 @@ prelow=matrix(NA, nrow = 100,ncol = 3)
 
 thetamean9<-matrix(0,100,9)
 for (i in 1:100) {
-  thetamean9[i,]= rowMeans(thetasave[i,1:9,],na.rm = T)
+  thetamean9[i,]= rowMeans(s.y.new[i,1:9,],na.rm = T)
   
 }
 
 for (i in 1:100) {
   for (j in 1:9) {
-    low[i,j]= hdi(thetasave[i,j,])[1]
-    high[i,j]= hdi(thetasave[i,j,])[2]
-    mean[i,j]=mean(thetasave[i,j,],na.rm = T)
+    low[i,j]= hdi(s.y.new[i,j,])[1]
+    high[i,j]= hdi(s.y.new[i,j,])[2]
+    mean[i,j]=mean(s.y.new[i,j,],na.rm = T)
   }
 }
-
-# for (i in 1:100) {
-#   for (j in 1:3) {
-#     prehigh[i,j]=hdi(thetasave[i,(9+j),])[1]
-#     prelow[i,j]= hdi(thetasave[i,(9+j),])[2]
-#     
-#     Predicted[i,j]=mean(thetasave[i,(9+j),],na.rm = T)
-#   }
-# }
-
 
 for (i in 1:100) {
   for (j in 1:3) {
-    prehigh[i,j]=hdi(s.y.new[i,(j),])[1]
-    prelow[i,j]= hdi(s.y.new[i,(j),])[2]
-    Predicted[i,j]=mean(s.y.new[i,(j),],na.rm = T)
+    prehigh[i,j]=hdi(s.y.new[i,(9+j),])[1]
+    prelow[i,j]= hdi(s.y.new[i,(9+j),])[2]
+
+    Predicted[i,j]=mean(s.y.new[i,(9+j),],na.rm = T)
   }
 }
+
+# 
+# for (i in 1:100) {
+#   for (j in 1:3) {
+#     prehigh[i,j]=hdi(s.y.new[i,(j),])[1]
+#     prelow[i,j]= hdi(s.y.new[i,(j),])[2]
+#     Predicted[i,j]=mean(s.y.new[i,(j),],na.rm = T)
+#   }
+# }
 
 
 estimathreeyear<-data.frame(time=c(2016:2024),Estimated=colSums(mean), 'Upper Bound'=colSums(high),
@@ -1188,7 +1170,7 @@ p=4
 mu=mean(Bupdiff$Bupdiff[101:600])
 sd=sd(Bupdiff$Bupdiff[101:600])
 thetasave=array(NA, dim = c(100,12,n))#theta for each county each quarter
-s.y.new=array(NA, dim = c(100,3,n))
+s.y.new=array(NA, dim = c(100,12,n))
 ii=2
 nn=3
 
@@ -1254,34 +1236,24 @@ for (ll in 1:n) {
   thetasave[,10,ll]<-exp(xbeta10)*thetasave[,6,ll]*Exp[,6]/Exp[,6]
   thetasave[,11,ll]<-exp(xbeta11)*thetasave[,10,ll]*Exp[,6]/Exp[,6]
   thetasave[,12,ll]<-exp(xbeta12)*thetasave[,11,ll]*Exp[,6]/Exp[,6]
-  s.y.new[,1,ll]<- rpois(length(thetasave[,10,ll]),thetasave[,10,ll])
-  s.y.new[,2,ll]<- rpois(length(thetasave[,11,ll]),thetasave[,11,ll])
-  s.y.new[,3,ll]<- rpois(length(thetasave[,12,ll]), thetasave[,12,ll])
+  #s.y.new[,1,ll]<- rpois(length(thetasave[,10,ll]),thetasave[,10,ll])
+  #s.y.new[,2,ll]<- rpois(length(thetasave[,11,ll]),thetasave[,11,ll])
+  #s.y.new[,3,ll]<- rpois(length(thetasave[,12,ll]), thetasave[,12,ll])
   
-  
+  for (k in 1:12) {
+    s.y.new[,k,ll]<- rpois(length(thetasave[,k,ll]),thetasave[,k,ll])
+  }
 }
 
 
-
-
-#2021
-statesumR<-apply(apply(s.y.new[,3,], 2, '/',Exp[,6]),2, sum)
-statebaseR<-apply(apply(thetasave[,6,], 2, '/',Exp[,6]),2, sum)
-length(which((statebaseR-statesumR)>0))
-
-
-statesumR<-apply(apply(s.y.new[,3,], 2, '/',Exp[,6]),2, sum)
-statebaseR<-0.8*apply(apply(thetasave[,6,], 2, '/',Exp[,6]),2, sum)
-length(which((statebaseR-statesumR)>0))
-
 #2024
-statesumR<-apply(apply(s.y.new[,3,], 2, '/',Exp[,6]),2, sum)
-statebaseR<-apply(apply(thetasave[,9,], 2, '/',Exp[,6]),2, sum)
+statesumR<-apply(apply(s.y.new[,12,], 2, '/',Exp[,6]),2, sum)
+statebaseR<-apply(apply(s.y.new[,9,], 2, '/',Exp[,6]),2, sum)
 length(which((statebaseR-statesumR)>0))
 
 
-statesumR<-apply(apply(s.y.new[,3,], 2, '/',Exp[,6]),2, sum)
-statebaseR<-0.8*apply(apply(thetasave[,9,], 2, '/',Exp[,6]),2, sum)
+statesumR<-apply(apply(s.y.new[,12,], 2, '/',Exp[,6]),2, sum)
+statebaseR<-0.8*apply(apply(s.y.new[,9,], 2, '/',Exp[,6]),2, sum)
 length(which((statebaseR-statesumR)>0))
 
 
@@ -1296,36 +1268,35 @@ prelow=matrix(NA, nrow = 100,ncol = 3)
 
 thetamean9<-matrix(0,100,9)
 for (i in 1:100) {
-  thetamean9[i,]= rowMeans(thetasave[i,1:9,],na.rm = T)
+  thetamean9[i,]= rowMeans(s.y.new[i,1:9,],na.rm = T)
   
 }
 
 for (i in 1:100) {
   for (j in 1:9) {
-    low[i,j]= hdi(thetasave[i,j,])[1]
-    high[i,j]= hdi(thetasave[i,j,])[2]
-    mean[i,j]=mean(thetasave[i,j,],na.rm = T)
+    low[i,j]= hdi(s.y.new[i,j,])[1]
+    high[i,j]= hdi(s.y.new[i,j,])[2]
+    mean[i,j]=mean(s.y.new[i,j,],na.rm = T)
   }
 }
-
-# for (i in 1:100) {
-#   for (j in 1:3) {
-#     prehigh[i,j]=hdi(thetasave[i,(9+j),])[1]
-#     prelow[i,j]= hdi(thetasave[i,(9+j),])[2]
-#     
-#     Predicted[i,j]=mean(thetasave[i,(9+j),],na.rm = T)
-#   }
-# }
-
 
 for (i in 1:100) {
   for (j in 1:3) {
-    prehigh[i,j]=hdi(s.y.new[i,(j),])[1]
-    prelow[i,j]= hdi(s.y.new[i,(j),])[2]
-    
-    Predicted[i,j]=mean(s.y.new[i,(j),],na.rm = T)
+    prehigh[i,j]=hdi(s.y.new[i,(9+j),])[1]
+    prelow[i,j]= hdi(s.y.new[i,(9+j),])[2]
+    Predicted[i,j]=mean(s.y.new[i,(9+j),],na.rm = T)
   }
 }
+
+# 
+# for (i in 1:100) {
+#   for (j in 1:3) {
+#     prehigh[i,j]=hdi(s.y.new[i,(j),])[1]
+#     prelow[i,j]= hdi(s.y.new[i,(j),])[2]
+#     
+#     Predicted[i,j]=mean(s.y.new[i,(j),],na.rm = T)
+#   }
+# }
 
 newexp<-cbind(Exp,Exp[,6],Exp[,6],Exp[,6],Exp[,6],Exp[,6],Exp[,6])
 
